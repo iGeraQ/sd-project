@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Bienvenido a MediApp</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; }
+        .header { background-color: #f8fafc; padding: 20px; text-align: center; border-radius: 6px 6px 0 0; }
+        .content { padding: 30px 20px; }
+        .footer { text-align: center; font-size: 12px; color: #888; margin-top: 30px; border-top: 1px solid #eaeaea; padding-top: 20px; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>¡Bienvenido a MediApp!</h2>
+        </div>
+        <div class="content">
+            <p>Hola <strong>{{ full_name }}</strong>,</p>
+            <p>¡Gracias por registrarte en MediApp! Nos alegra tenerte con nosotros.</p>
+            <p>Con nuestra plataforma podrás agendar citas médicas, revisar tu historial clínico y recibir notificaciones importantes sobre tu salud.</p>
+            <div style="text-align: center;">
+                <a href="{{ frontend_url }}/login" class="button">Inicia sesión ahora</a>
+            </div>
+        </div>
+        <div class="footer">
+            <p>MediApp - Sistema de Gestión de Citas Médicas</p>
+            <p>Este es un correo automático, por favor no respondas a este mensaje.</p>
+        </div>
+    </div>
+</body>
+</html>

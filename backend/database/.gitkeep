@@ -1,0 +1,2 @@
+# Database init scripts will go here (seed.sql, etc.)
+# This directory is mounted into PostgreSQL container at /docker-entrypoint-initdb.d/

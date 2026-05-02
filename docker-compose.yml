@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: mediapp-db
+    environment:
+      POSTGRES_USER: mediapp_user
+      POSTGRES_PASSWORD: mediapp_pass
+      POSTGRES_DB: mediapp_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mediapp_user -d mediapp_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mediapp-network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mediapp-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mediapp-network
+
+volumes:
+  postgres_data:
+
+networks:
+  mediapp-network:
+    driver: bridge
