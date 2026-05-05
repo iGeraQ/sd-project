@@ -61,10 +61,11 @@ app.add_middleware(
 
 
 # --- Register routers ---
-from app.routers import auth, patients, appointments, notifications, medical_records, reports
+from app.routers import auth, patients, appointments, notifications, medical_records, reports, doctors
 
 app.include_router(auth.router, prefix=settings.api_prefix)
 app.include_router(patients.router, prefix=settings.api_prefix)
+app.include_router(doctors.router, prefix=settings.api_prefix)
 app.include_router(appointments.router, prefix=settings.api_prefix)
 app.include_router(notifications.router, prefix=settings.api_prefix)
 app.include_router(medical_records.router, prefix=settings.api_prefix)
