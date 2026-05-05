@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from app.models.user import User
 from app.models.doctor import Doctor
 from app.models.patient import Patient
-from app.models.available_slot import AvailableSlot
+from app.models.doctor_schedule import DoctorSchedule
 from app.utils.security import hash_password
 
 @pytest_asyncio.fixture
@@ -16,7 +16,7 @@ async def setup_doctor_and_patient(db_session):
     db_session.add(doc_user)
     await db_session.flush()
     
-    doc = Doctor(user_id=doc_user.id, full_name="Test Doctor", specialty="Test", license_number="123-e2e")
+    doc = Doctor(user_id=doc_user.id, full_name="Test Doctor", specialty="Test", license_number="123-e2e", slot_duration_minutes=60)
     db_session.add(doc)
     await db_session.flush()
     
@@ -28,19 +28,19 @@ async def setup_doctor_and_patient(db_session):
     db_session.add(pat)
     await db_session.flush()
     
-    # Create an available slot tomorrow
+    # Create schedule tomorrow
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    slot = AvailableSlot(
+    day_of_week = tomorrow.weekday()
+    schedule = DoctorSchedule(
         doctor_id=doc.id,
-        slot_date=tomorrow,
+        day_of_week=day_of_week,
         start_time=datetime.time(10, 0),
-        end_time=datetime.time(11, 0),
-        is_available=True
+        end_time=datetime.time(12, 0)
     )
-    db_session.add(slot)
+    db_session.add(schedule)
     await db_session.commit()
     
-    return {"doctor_id": doc.id, "patient_id": pat.id, "slot_id": slot.id, "slot_version": slot.version}
+    return {"doctor_id": doc.id, "patient_id": pat.id, "appointment_date": tomorrow}
 
 @pytest.mark.asyncio
 async def test_appointment_crud_e2e(async_client: AsyncClient, setup_doctor_and_patient):
@@ -61,13 +61,14 @@ async def test_appointment_crud_e2e(async_client: AsyncClient, setup_doctor_and_
     )
     assert slots_res.status_code == 200
     slots = slots_res.json()["data"]
-    assert len(slots) == 1
-    assert slots[0]["id"] == data["slot_id"]
+    assert len(slots) >= 1
     
     # 3. Create appointment
     create_payload = {
-        "slot_id": slots[0]["id"],
-        "slot_version": slots[0]["version"],
+        "doctor_id": data["doctor_id"],
+        "appointment_date": slots[0]["slot_date"],
+        "start_time": slots[0]["start_time"],
+        "end_time": slots[0]["end_time"],
         "reason": "Routine checkup"
     }
     create_res = await async_client.post("/api/v1/appointments", json=create_payload, headers=headers)

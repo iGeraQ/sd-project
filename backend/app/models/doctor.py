@@ -14,9 +14,10 @@ class Doctor(Base):
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     specialty: Mapped[str | None] = mapped_column(String(100))
     license_number: Mapped[str | None] = mapped_column(String(50), unique=True)
+    slot_duration_minutes: Mapped[int] = mapped_column(default=60)
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="doctor")
-    available_slots: Mapped[list["AvailableSlot"]] = relationship(back_populates="doctor")
+    schedules: Mapped[list["DoctorSchedule"]] = relationship(back_populates="doctor")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="doctor")
     medical_records: Mapped[list["MedicalRecord"]] = relationship(back_populates="doctor")

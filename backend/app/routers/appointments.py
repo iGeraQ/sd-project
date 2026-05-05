@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies import get_db, get_current_user, TokenData, any_authenticated
-from app.schemas.appointment import CreateAppointmentRequest, AppointmentResponse, SlotResponse
+from app.schemas.appointment import CreateAppointmentRequest, AppointmentResponse, ComputedSlotResponse
 from app.schemas.common import SuccessResponse
 from app.services.appointments_service import AppointmentsService
 
@@ -13,7 +13,7 @@ from app.services.appointments_service import AppointmentsService
 router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 
-@router.get("/slots", response_model=SuccessResponse[list[SlotResponse]])
+@router.get("/slots", response_model=SuccessResponse[list[ComputedSlotResponse]])
 async def list_available_slots(
     doctor_id: int = Query(...),
     start_date: datetime.date = Query(...),

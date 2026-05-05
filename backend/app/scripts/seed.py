@@ -3,7 +3,7 @@ Seed script to populate the database with initial development data.
 Following Phase 8 requirements:
 - 1 Doctor (Dr. García)
 - 3 Patients
-- Available slots for 2 weeks
+- Schedule rules for the doctor
 - 5 Appointments
 - 2 Medical records
 """
@@ -16,7 +16,7 @@ from app.database import AsyncSessionLocal
 from app.models.user import User
 from app.models.doctor import Doctor
 from app.models.patient import Patient
-from app.models.available_slot import AvailableSlot
+from app.models.doctor_schedule import DoctorSchedule
 from app.models.appointment import Appointment
 from app.models.medical_record import MedicalRecord
 from app.utils.security import hash_password
@@ -43,7 +43,8 @@ async def seed_data():
             user_id=doc_user.id,
             full_name="Dr. Juan García",
             specialty="Medicina General",
-            license_number="MED-12345"
+            license_number="MED-12345",
+            slot_duration_minutes=60
         )
         db.add(doctor)
         await db.flush()
@@ -67,45 +68,44 @@ async def seed_data():
             await db.flush()
             patients.append(p)
 
-        print("Seeding available slots...")
-        # 3. Available slots for 2 weeks (e.g. from today to today+14 days, Mon-Fri, 9am to 1pm)
-        slots = []
-        today = datetime.date.today()
-        for i in range(14):
-            current_date = today + datetime.timedelta(days=i)
-            # Skip weekends
-            if current_date.weekday() > 4:
-                continue
-            
-            # 9:00 to 13:00, 1-hour slots
-            for hour in range(9, 13):
-                slot = AvailableSlot(
-                    doctor_id=doctor.id,
-                    slot_date=current_date,
-                    start_time=datetime.time(hour, 0),
-                    end_time=datetime.time(hour + 1, 0),
-                    is_available=True,
-                )
-                db.add(slot)
-                slots.append(slot)
+        print("Seeding doctor schedules...")
+        # 3. Schedule for Mon-Fri, 9am to 1pm
+        for day in range(5):
+            schedule = DoctorSchedule(
+                doctor_id=doctor.id,
+                day_of_week=day,
+                start_time=datetime.time(9, 0),
+                end_time=datetime.time(13, 0)
+            )
+            db.add(schedule)
         await db.flush()
 
         print("Seeding appointments...")
         # 4. 5 Appointments
         appointments = []
-        # Let's take the first 5 slots that we created
-        for i in range(5):
-            slot = slots[i]
-            slot.is_available = False # Mark as booked
-            slot.version += 1
+        today = datetime.date.today()
+        # Find next Monday to start booking
+        current_date = today + datetime.timedelta(days=(7 - today.weekday()) % 7)
+        if current_date == today:
+            current_date += datetime.timedelta(days=1)
             
+        # Book 5 appointments
+        for i in range(5):
+            # Book 1 per day at 10 AM
+            appt_date = current_date + datetime.timedelta(days=i)
+            # Skip weekend if we cross it
+            if appt_date.weekday() > 4:
+                appt_date += datetime.timedelta(days=2)
+                
             patient = patients[i % 3] # Assign round-robin to our 3 patients
             
             # Create appointment
             appt = Appointment(
                 patient_id=patient.id,
                 doctor_id=doctor.id,
-                slot_id=slot.id,
+                appointment_date=appt_date,
+                start_time=datetime.time(10, 0),
+                end_time=datetime.time(11, 0),
                 status="completed" if i < 2 else "scheduled", # First 2 completed, rest scheduled
                 created_by="doctor",
                 reason=f"Consulta general {i+1}"

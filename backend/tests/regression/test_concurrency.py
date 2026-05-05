@@ -1,35 +1,35 @@
 import pytest
 import pytest_asyncio
 import asyncio
+import datetime
 from httpx import AsyncClient
 
 from app.models.user import User
 from app.models.doctor import Doctor
 from app.models.patient import Patient
-from app.models.available_slot import AvailableSlot
+from app.models.doctor_schedule import DoctorSchedule
 from app.utils.security import hash_password
 
 @pytest_asyncio.fixture
 async def setup_concurrency_data(db_session):
-    """Seed the database with a doctor, a slot, and 3 patients."""
+    """Seed the database with a doctor, a schedule, and 3 patients."""
     doc_user = User(username="doc.concurrency", password_hash=hash_password("pwd123"), role="doctor")
     db_session.add(doc_user)
     await db_session.flush()
     
-    doc = Doctor(user_id=doc_user.id, full_name="Doc Concurrency", specialty="Test", license_number="123-conc")
+    doc = Doctor(user_id=doc_user.id, full_name="Doc Concurrency", specialty="Test", license_number="123-conc", slot_duration_minutes=60)
     db_session.add(doc)
     await db_session.flush()
 
-    import datetime
     tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-    slot = AvailableSlot(
+    day_of_week = tomorrow.weekday()
+    schedule = DoctorSchedule(
         doctor_id=doc.id,
-        slot_date=tomorrow,
+        day_of_week=day_of_week,
         start_time=datetime.time(9, 0),
-        end_time=datetime.time(10, 0),
-        is_available=True
+        end_time=datetime.time(10, 0)
     )
-    db_session.add(slot)
+    db_session.add(schedule)
     
     patients = []
     for i in range(3):
@@ -41,13 +41,13 @@ async def setup_concurrency_data(db_session):
         patients.append(f"pat{i}")
         
     await db_session.commit()
-    return {"doctor_id": doc.id, "slot_id": slot.id, "slot_version": slot.version, "patients": patients}
+    return {"doctor_id": doc.id, "appointment_date": tomorrow, "patients": patients}
 
 @pytest.mark.asyncio
 async def test_appointment_concurrency(async_client: AsyncClient, setup_concurrency_data):
     """
     Test distributed concurrency:
-    Simulates 5 patients trying to book the exact same slot at the exact same time.
+    Simulates 5 patients trying to book the exact same time slot at the exact same time.
     Only ONE should succeed (201), the rest should get 409 Conflict.
     """
     data = setup_concurrency_data
@@ -70,15 +70,17 @@ async def test_appointment_concurrency(async_client: AsyncClient, setup_concurre
         assert res.status_code == 200
         tokens.append(res.json()["data"]["token"])
     
-    slot_id = data["slot_id"]
-    slot_version = data["slot_version"]
+    doctor_id = data["doctor_id"]
+    appointment_date = data["appointment_date"].isoformat()
     
     # CONCURRENCY TEST: 5 simultaneous requests
     async def book_slot(token):
         headers = {"Authorization": f"Bearer {token}"}
         payload = {
-            "slot_id": slot_id,
-            "slot_version": slot_version,
+            "doctor_id": doctor_id,
+            "appointment_date": appointment_date,
+            "start_time": "09:00:00",
+            "end_time": "10:00:00",
             "reason": "Test de concurrencia distribuida"
         }
         return await async_client.post("/api/v1/appointments", json=payload, headers=headers)
