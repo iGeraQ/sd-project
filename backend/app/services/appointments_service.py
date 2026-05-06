@@ -1,5 +1,6 @@
 """Appointments service — handles booking with rules-based concurrency control."""
 
+import uuid
 import datetime
 from fastapi import HTTPException, status
 from sqlalchemy import select, and_, or_
@@ -24,7 +25,7 @@ class AppointmentsService:
         self.db = db
         self.notifications_service = NotificationsService(db)
 
-    async def get_available_slots(self, doctor_id: int, start_date: datetime.date, end_date: datetime.date) -> list[ComputedSlotResponse]:
+    async def get_available_slots(self, doctor_id: uuid.UUID, start_date: datetime.date, end_date: datetime.date) -> list[ComputedSlotResponse]:
         """Calculate available slots on the fly based on rules and existing appointments."""
         # Get doctor and their schedules
         doctor_res = await self.db.execute(select(Doctor).where(Doctor.id == doctor_id).options(selectinload(Doctor.schedules)))
@@ -94,7 +95,7 @@ class AppointmentsService:
             
         return available_slots
 
-    async def create_appointment(self, data: CreateAppointmentRequest, current_user_id: int, current_user_role: str) -> AppointmentResponse:
+    async def create_appointment(self, data: CreateAppointmentRequest, current_user_id: uuid.UUID, current_user_role: str) -> AppointmentResponse:
         """Creates an appointment with overlap validation."""
         patient_id = data.patient_id
         if current_user_role == "patient":
@@ -149,7 +150,7 @@ class AppointmentsService:
                 user_id=doctor.user_id,
                 type="appointment_created",
                 message=f"Nueva cita programada para el {data.appointment_date} a las {data.start_time}",
-                reference={"type": "appointment", "id": appointment.id}
+                reference={"type": "appointment", "id": str(appointment.id)}
             )
         else:
             patient_res = await self.db.execute(select(Patient).where(Patient.id == patient_id))
@@ -158,7 +159,7 @@ class AppointmentsService:
                 user_id=patient.user_id,
                 type="appointment_created",
                 message=f"Se ha programado una cita para usted el {data.appointment_date} a las {data.start_time}",
-                reference={"type": "appointment", "id": appointment.id}
+                reference={"type": "appointment", "id": str(appointment.id)}
             )
 
         # Emails
@@ -183,7 +184,7 @@ class AppointmentsService:
 
         return AppointmentResponse.model_validate(appointment)
 
-    async def get_appointments(self, user_id: int, user_role: str) -> list[AppointmentResponse]:
+    async def get_appointments(self, user_id: uuid.UUID, user_role: str) -> list[AppointmentResponse]:
         """Get appointments for the current user."""
         query = select(Appointment)
         
@@ -201,7 +202,7 @@ class AppointmentsService:
         appointments = result.scalars().all()
         return [AppointmentResponse.model_validate(a) for a in appointments]
 
-    async def cancel_appointment(self, appointment_id: int, user_id: int, user_role: str) -> AppointmentResponse:
+    async def cancel_appointment(self, appointment_id: uuid.UUID, user_id: uuid.UUID, user_role: str) -> AppointmentResponse:
         """Cancel an appointment."""
         query = select(Appointment).where(Appointment.id == appointment_id).with_for_update()
         result = await self.db.execute(query)
@@ -237,14 +238,14 @@ class AppointmentsService:
                 user_id=doctor.user_id,
                 type="appointment_cancelled",
                 message=f"El paciente ha cancelado la cita del {appointment.appointment_date} a las {appointment.start_time}",
-                reference={"type": "appointment", "id": appointment.id}
+                reference={"type": "appointment", "id": str(appointment.id)}
             )
         elif user_role == "doctor":
             await self.notifications_service.create_notification(
                 user_id=patient.user_id,
                 type="appointment_cancelled",
                 message=f"El médico ha cancelado su cita del {appointment.appointment_date} a las {appointment.start_time}",
-                reference={"type": "appointment", "id": appointment.id}
+                reference={"type": "appointment", "id": str(appointment.id)}
             )
 
         import asyncio

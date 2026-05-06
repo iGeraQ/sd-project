@@ -54,8 +54,8 @@ async def setup_doctor_with_patient_and_appointment(db_session):
     return {
         "doctor_user": doc_username, 
         "doctor_pwd": "magicpwd123",
-        "patient_id": pat.id,
-        "appointment_id": appointment.id
+        "patient_id": str(pat.id),
+        "appointment_id": str(appointment.id)
     }
 
 @pytest.mark.asyncio

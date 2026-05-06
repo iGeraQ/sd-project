@@ -1,5 +1,6 @@
 """Doctor schemas."""
 
+import uuid
 import datetime
 from pydantic import BaseModel, Field
 
@@ -22,8 +23,8 @@ class DoctorScheduleUpdateRequest(BaseModel):
 
 
 class DoctorProfileResponse(BaseModel):
-    id: int
-    user_id: int
+    id: uuid.UUID
+    user_id: uuid.UUID
     full_name: str
     specialty: str | None
     license_number: str | None

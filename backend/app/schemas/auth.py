@@ -1,5 +1,6 @@
 """Authentication schemas — register, login, token responses."""
 
+import uuid
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 
@@ -21,7 +22,7 @@ class LoginRequest(BaseModel):
 
 
 class UserInfo(BaseModel):
-    id: int
+    id: uuid.UUID
     username: str
     role: str
     full_name: str

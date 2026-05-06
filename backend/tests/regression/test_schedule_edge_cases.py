@@ -33,7 +33,7 @@ async def setup_schedule_edge_data(db_session):
     await db_session.commit()
     
     return {
-        "doctor_id": doc.id,
+        "doctor_id": str(doc.id),
         "doctor_username": doc_username,
         "patient_username": pat_username,
     }

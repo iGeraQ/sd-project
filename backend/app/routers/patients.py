@@ -1,5 +1,6 @@
 """Patients router — CRUD endpoints for patient management."""
 
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,7 +28,7 @@ async def list_patients(
 
 @router.get("/{patient_id}", response_model=SuccessResponse[PatientResponse])
 async def get_patient_detail(
-    patient_id: int,
+    patient_id: uuid.UUID,
     user: TokenData = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -45,7 +46,7 @@ async def get_patient_detail(
 
 @router.put("/{patient_id}", response_model=SuccessResponse[PatientResponse])
 async def update_patient_endpoint(
-    patient_id: int,
+    patient_id: uuid.UUID,
     body: PatientUpdate,
     user: TokenData = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -65,7 +66,7 @@ async def update_patient_endpoint(
 
 @router.delete("/{patient_id}", response_model=SuccessResponse[None])
 async def delete_patient_endpoint(
-    patient_id: int,
+    patient_id: uuid.UUID,
     user: TokenData = Depends(only_doctor),
     db: AsyncSession = Depends(get_db),
 ):

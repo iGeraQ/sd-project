@@ -1,8 +1,10 @@
 """Appointment model — medical appointment reservations."""
 
+import uuid
 import datetime
 
 from sqlalchemy import ForeignKey, String, Text, Date, Time
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -11,9 +13,9 @@ from app.models.base import Base, TimestampMixin
 class Appointment(Base, TimestampMixin):
     __tablename__ = "appointments"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"), nullable=False, index=True)
-    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id"), nullable=False, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("patients.id"), nullable=False, index=True)
+    doctor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("doctors.id"), nullable=False, index=True)
     appointment_date: Mapped[datetime.date] = mapped_column(Date, nullable=False, index=True)
     start_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
     end_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)

@@ -1,8 +1,10 @@
 """DoctorSchedule model — availability rules for doctors."""
 
+import uuid
 import datetime
 
 from sqlalchemy import ForeignKey, Integer, Time, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -14,8 +16,8 @@ class DoctorSchedule(Base):
         UniqueConstraint("doctor_id", "day_of_week", name="uq_doctor_day_of_week"),
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    doctor_id: Mapped[int] = mapped_column(ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    doctor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False)
     day_of_week: Mapped[int] = mapped_column(Integer, nullable=False)  # 0 = Monday, 6 = Sunday
     start_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
     end_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)

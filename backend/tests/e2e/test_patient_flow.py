@@ -33,7 +33,7 @@ async def setup_doctor_with_schedule(db_session):
     db_session.add(schedule)
     await db_session.commit()
     
-    return {"doctor_id": doc.id, "appointment_date": tomorrow}
+    return {"doctor_id": str(doc.id), "appointment_date": tomorrow}
 
 @pytest.mark.asyncio
 async def test_normal_patient_flow(async_client: AsyncClient, setup_doctor_with_schedule):
@@ -86,7 +86,7 @@ async def test_normal_patient_flow(async_client: AsyncClient, setup_doctor_with_
 
     # 4. Book an appointment
     book_payload = {
-        "doctor_id": doc_data["doctor_id"],
+        "doctor_id": str(doc_data["doctor_id"]),
         "appointment_date": target_slot["slot_date"],
         "start_time": target_slot["start_time"],
         "end_time": target_slot["end_time"],

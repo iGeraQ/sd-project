@@ -1,5 +1,6 @@
 """Appointments router — endpoints for booking and managing appointments."""
 
+import uuid
 import datetime
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/appointments", tags=["Appointments"])
 
 @router.get("/slots", response_model=SuccessResponse[list[ComputedSlotResponse]])
 async def list_available_slots(
-    doctor_id: int = Query(...),
+    doctor_id: uuid.UUID = Query(...),
     start_date: datetime.date = Query(...),
     end_date: datetime.date = Query(...),
     user: TokenData = Depends(any_authenticated),
@@ -53,7 +54,7 @@ async def list_appointments(
 
 @router.delete("/{appointment_id}", response_model=SuccessResponse[AppointmentResponse])
 async def cancel_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     user: TokenData = Depends(any_authenticated),
     db: AsyncSession = Depends(get_db),
 ):

@@ -57,7 +57,7 @@ async def setup_overlap_data(db_session):
     await db_session.commit()
     
     return {
-        "doctor_id": doc.id, 
+        "doctor_id": str(doc.id), 
         "patient_username": pat_user.username,
         "appointment_date": tomorrow.isoformat()
     }
@@ -78,7 +78,7 @@ async def test_appointment_overlap_edge_cases(async_client: AsyncClient, setup_o
     headers = {"Authorization": f"Bearer {token}"}
     
     base_payload = {
-        "doctor_id": data["doctor_id"],
+        "doctor_id": str(data["doctor_id"]),
         "appointment_date": data["appointment_date"],
         "reason": "Overlap test"
     }

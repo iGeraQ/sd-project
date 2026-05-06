@@ -40,7 +40,7 @@ async def setup_doctor_and_patient(db_session):
     db_session.add(schedule)
     await db_session.commit()
     
-    return {"doctor_id": doc.id, "patient_id": pat.id, "appointment_date": tomorrow}
+    return {"doctor_id": str(doc.id), "patient_id": str(pat.id), "appointment_date": tomorrow}
 
 @pytest.mark.asyncio
 async def test_appointment_crud_e2e(async_client: AsyncClient, setup_doctor_and_patient):
@@ -65,7 +65,7 @@ async def test_appointment_crud_e2e(async_client: AsyncClient, setup_doctor_and_
     
     # 3. Create appointment
     create_payload = {
-        "doctor_id": data["doctor_id"],
+        "doctor_id": str(data["doctor_id"]),
         "appointment_date": slots[0]["slot_date"],
         "start_time": slots[0]["start_time"],
         "end_time": slots[0]["end_time"],

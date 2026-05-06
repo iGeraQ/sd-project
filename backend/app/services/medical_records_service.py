@@ -1,5 +1,6 @@
 """Medical Records service — handles AES-256-GCM encrypted clinical data."""
 
+import uuid
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +20,7 @@ class MedicalRecordsService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_record(self, doctor_id: int, data: CreateMedicalRecordRequest) -> MedicalRecordEntry:
+    async def create_record(self, doctor_id: uuid.UUID, data: CreateMedicalRecordRequest) -> MedicalRecordEntry:
         """Create a new medical record (encrypts data before saving)."""
         # Validate appointment and permissions
         res = await self.db.execute(
@@ -83,7 +84,7 @@ class MedicalRecordsService:
             notes=data.notes,
         )
 
-    async def get_patient_history(self, patient_id: int, current_user_id: int, current_user_role: str) -> PatientHistoryResponse:
+    async def get_patient_history(self, patient_id: uuid.UUID, current_user_id: uuid.UUID, current_user_role: str) -> PatientHistoryResponse:
         """Fetch and decrypt the entire history for a patient."""
         # RBAC Check
         if current_user_role == "patient":

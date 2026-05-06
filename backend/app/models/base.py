@@ -3,9 +3,11 @@ SQLAlchemy 2.0 declarative base with common columns.
 All models inherit from this base.
 """
 
+import uuid
 from datetime import datetime
 
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 

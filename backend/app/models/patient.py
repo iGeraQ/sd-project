@@ -1,6 +1,9 @@
 """Patient model — personal data linked to a user account."""
 
+import uuid
+
 from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -9,8 +12,8 @@ from app.models.base import Base, TimestampMixin
 class Patient(Base, TimestampMixin):
     __tablename__ = "patients"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     address: Mapped[str | None] = mapped_column(Text)
     email: Mapped[str] = mapped_column(String(150), nullable=False)

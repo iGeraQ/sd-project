@@ -47,7 +47,7 @@ async def setup_concurrency_data(db_session):
         patients.append(pat_username)
         
     await db_session.commit()
-    return {"doctor_id": doc.id, "appointment_date": tomorrow, "patients": patients}
+    return {"doctor_id": str(doc.id), "appointment_date": tomorrow, "patients": patients}
 
 @pytest.mark.asyncio
 async def test_appointment_concurrency(async_client: AsyncClient, setup_concurrency_data):
@@ -76,7 +76,7 @@ async def test_appointment_concurrency(async_client: AsyncClient, setup_concurre
         assert res.status_code == 200
         tokens.append(res.json()["data"]["token"])
     
-    doctor_id = data["doctor_id"]
+    doctor_id = str(data["doctor_id"])
     appointment_date = data["appointment_date"].isoformat()
     
     # CONCURRENCY TEST: 5 simultaneous requests
@@ -121,7 +121,7 @@ async def test_disjoint_concurrency(async_client: AsyncClient, setup_concurrency
     res2 = await async_client.post("/api/v1/auth/login", json={"username": data["patients"][1], "password": "pwd123"})
     token2 = res2.json()["data"]["token"]
     
-    doctor_id = data["doctor_id"]
+    doctor_id = str(data["doctor_id"])
     appointment_date = data["appointment_date"].isoformat()
     
     async def book_slot(token, start_time, end_time):

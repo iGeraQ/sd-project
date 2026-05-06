@@ -1,13 +1,14 @@
 """Patient schemas — CRUD operations."""
 
+import uuid
 from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 from datetime import datetime
 
 
 class PatientResponse(BaseModel):
-    id: int
-    user_id: int
+    id: uuid.UUID
+    user_id: uuid.UUID
     full_name: str
     address: str | None
     email: str

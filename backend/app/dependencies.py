@@ -2,6 +2,7 @@
 FastAPI dependencies — database sessions, authentication, and authorization.
 """
 
+import uuid
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
@@ -17,7 +18,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 class TokenData(BaseModel):
     """Decoded JWT payload data."""
-    sub: int
+    sub: uuid.UUID
     username: str
     role: str
 
@@ -42,11 +43,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> TokenData:
     try:
         payload = decode_access_token(token)
         return TokenData(
-            sub=payload["sub"],
+            sub=uuid.UUID(payload["sub"]),
             username=payload["username"],
             role=payload["role"],
         )
-    except (JWTError, KeyError):
+    except (JWTError, KeyError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "TOKEN_INVALID", "message": "Token inválido o expirado"},

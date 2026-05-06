@@ -1,5 +1,6 @@
 """Medical record schemas — encrypted clinical history."""
 
+import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -12,7 +13,7 @@ class VitalSigns(BaseModel):
 
 
 class CreateMedicalRecordRequest(BaseModel):
-    appointment_id: int
+    appointment_id: uuid.UUID
     vital_signs: VitalSigns
     diagnosis: str
     lab_results: str | None = None
@@ -21,8 +22,8 @@ class CreateMedicalRecordRequest(BaseModel):
 
 
 class MedicalRecordEntry(BaseModel):
-    id: int
-    appointment_id: int
+    id: uuid.UUID
+    appointment_id: uuid.UUID
     date: datetime
     doctor_name: str
     vital_signs: VitalSigns
@@ -33,7 +34,7 @@ class MedicalRecordEntry(BaseModel):
 
 
 class PatientHeader(BaseModel):
-    id: int
+    id: uuid.UUID
     full_name: str
     age: int | None
     gender: str | None

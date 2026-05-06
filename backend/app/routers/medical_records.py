@@ -1,5 +1,6 @@
 """Medical Records router."""
 
+import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,7 @@ async def create_medical_record(
 
 @router.get("/patient/{patient_id}", response_model=SuccessResponse[PatientHistoryResponse])
 async def get_patient_history(
-    patient_id: int,
+    patient_id: uuid.UUID,
     user: TokenData = Depends(any_authenticated),
     db: AsyncSession = Depends(get_db),
 ):

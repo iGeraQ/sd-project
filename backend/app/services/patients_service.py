@@ -1,5 +1,6 @@
 """Patients service — CRUD operations for patient records."""
 
+import uuid
 import math
 
 from fastapi import HTTPException, status
@@ -36,7 +37,7 @@ class PatientsService:
 
         # Paginate
         offset = (page - 1) * limit
-        query = query.offset(offset).limit(limit).order_by(Patient.id)
+        query = query.offset(offset).limit(limit).order_by(Patient.created_at)
         result = await self.db.execute(query)
         patients = result.scalars().all()
 
@@ -49,19 +50,19 @@ class PatientsService:
 
         return [PatientResponse.model_validate(p) for p in patients], pagination
 
-    async def get_by_id(self, patient_id: int) -> PatientResponse:
+    async def get_by_id(self, patient_id: uuid.UUID) -> PatientResponse:
         """Get a single patient by ID."""
         patient = await self._find_or_404(patient_id)
         return PatientResponse.model_validate(patient)
 
-    async def get_patient_id_for_user(self, user_id: int) -> int | None:
+    async def get_patient_id_for_user(self, user_id: uuid.UUID) -> uuid.UUID | None:
         """Resolve the patient.id for a given user_id. Returns None if not found."""
         result = await self.db.execute(
             select(Patient.id).where(Patient.user_id == user_id)
         )
         return result.scalar_one_or_none()
 
-    async def update(self, patient_id: int, data: PatientUpdate) -> PatientResponse:
+    async def update(self, patient_id: uuid.UUID, data: PatientUpdate) -> PatientResponse:
         """Update a patient's information (partial update)."""
         patient = await self._find_or_404(patient_id)
 
@@ -72,7 +73,7 @@ class PatientsService:
         await self.db.flush()
         return PatientResponse.model_validate(patient)
 
-    async def delete(self, patient_id: int) -> None:
+    async def delete(self, patient_id: uuid.UUID) -> None:
         """Delete a patient and their associated user account (cascade)."""
         patient = await self._find_or_404(patient_id)
 
@@ -85,7 +86,7 @@ class PatientsService:
 
     # --- Private helpers ---
 
-    async def _find_or_404(self, patient_id: int) -> Patient:
+    async def _find_or_404(self, patient_id: uuid.UUID) -> Patient:
         """Fetch a patient or raise 404."""
         result = await self.db.execute(
             select(Patient).where(Patient.id == patient_id)
